@@ -2,6 +2,8 @@ import re
 import os
 
 import networkx as nx
+import random
+import matplotlib.pyplot as plt
 
 import utils
 
@@ -166,3 +168,14 @@ def write_output_file(G, c, k, path):
         for road in k:
             fo.write(str(road[0]) + " " + str(road[1]) + "\n")
         fo.close()
+
+
+g = nx.Graph()
+  
+for i in range(0,30):
+    g.add_edge(1,i, weight=random.randrange(0,5))
+  
+nx.draw(g)
+
+write_input_file(g,"test.in")
+plt.savefig("test_draw.png")
