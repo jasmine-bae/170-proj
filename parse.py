@@ -170,12 +170,42 @@ def write_output_file(G, c, k, path):
         fo.close()
 
 
-g = nx.Graph()
-  
-for i in range(0,30):
-    g.add_edge(1,i, weight=random.randrange(0,5))
-  
-nx.draw(g)
 
-write_input_file(g,"test.in")
-plt.savefig("test_draw.png")
+#Sarthak's Code Test
+# g = nx.Graph()
+  
+# for i in range(0,30):
+#     g.add_edge(1,i, weight=random.randrange(0,5))
+  
+# nx.draw(g)
+
+# write_input_file(g,"test.in")
+# plt.savefig("test_draw.png")
+
+#Jasmine's Code Tests
+h = nx.Graph()
+for i in range(0,30):
+    for j in range(0,30):
+        h.add_edge(i,j, weight = round(random.random(), 3))
+
+nx.draw(h)
+write_input_file(h, "test2.in")
+plt.savefig("test2.png")
+
+p = nx.Graph()
+for i in range(0,50):
+    for j in range(0,50):
+        p.add_edge(i,j, weight = round(random.random(), 3)) 
+nx.draw(p)
+write_input_file(p, "test3.in")
+plt.savefig("test3.png")
+
+a = nx.Graph()
+for i in range(0,100):
+    for j in range(0,100):
+        a.add_edge(i,j, weight = round(random.random(), 3)) 
+nx.draw(a)
+write_input_file(a, "test4.in")
+plt.savefig("test4.png")
+
+
