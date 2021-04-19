@@ -186,26 +186,33 @@ def write_output_file(G, c, k, path):
 h = nx.Graph()
 for i in range(0,30):
     for j in range(0,30):
-        h.add_edge(i,j, weight = round(random.random(), 3))
+        if(i != j):
+            h.add_edge(i,j, weight = round(random.random()+.01, 2))
 
 nx.draw(h)
-write_input_file(h, "test2.in")
-plt.savefig("test2.png")
+write_input_file(h, "30.in")
+plt.savefig("30G.png")
 
 p = nx.Graph()
 for i in range(0,50):
     for j in range(0,50):
-        p.add_edge(i,j, weight = round(random.random(), 3)) 
+        if(i != j):
+            p.add_edge(i,j, weight = round(random.random()+.01, 2)) 
 nx.draw(p)
-write_input_file(p, "test3.in")
-plt.savefig("test3.png")
+write_input_file(p, "50.in")
+plt.savefig("50G.png")
 
 a = nx.Graph()
 for i in range(0,100):
     for j in range(0,100):
-        a.add_edge(i,j, weight = round(random.random(), 3)) 
+        if(i != j):
+            a.add_edge(i,j, weight = round(random.random()+.01, 2)) 
 nx.draw(a)
-write_input_file(a, "test4.in")
-plt.savefig("test4.png")
+write_input_file(a, "100.in")
+plt.savefig("100G.png")
+
+read_input_file("100.in")
+read_input_file("50.in")
+read_input_file("30.in")
 
 
