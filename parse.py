@@ -61,7 +61,6 @@ def read_input_file(path, min_size=None, max_size=None):
 
         return G
 
-
 def write_input_file(G, path):
     """
     Write a graph to the input file format
