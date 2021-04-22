@@ -32,24 +32,27 @@ def solve(G):
 		num_k = 100
 		num_c = 5
 
-	s_list = [0]
-	t_list = [len(G)-1]
+	s_list = [[0]]
+	t_list = [[len(G)-1]]
 
-	print(G.edges().data())
+	#print(G.edges().data())
 	#set capacity to be 1/weight so that min cut priortizes includes shortest edges
 	for edge in G.edges().data():
 		G[edge[0]][edge[1]]['capacity'] = 1.0/edge[2]["weight"]
 	
-
+	partition_cnt = 0
 	while(num_k>0 and num_c >0):
 		# get the set of edges in the min cut
-		cut_val, partition = nx.minimum_cut(G, s_list[0], t_list[0])
-		reachable, non_reachable = partition
-		cutset = set()
-		for u, nbrs in ((n, G[n]) for n in reachable):
-		    cutset.update((u, v, G[u][v]['capacity']) for v in nbrs if v in non_reachable)
-		cutset = list(cutset)
-		cutset.sort(reverse = True, key = lambda x : x[2])
+		max_cut_val = 0
+		for i in range(0, len(s_list[partition_cnt])):
+			cut_val, partition = nx.minimum_cut(G, s_list[partition_cnt][i], t_list[partition_cnt][i])
+			if(cut_val>max_cut_val):
+				reachable, non_reachable = partition
+				cutset = set()
+				for u, nbrs in ((n, G[n]) for n in reachable):
+				    cutset.update((u, v, G[u][v]['capacity']) for v in nbrs if v in non_reachable)
+				cutset = list(cutset)
+				cutset.sort(reverse = True, key = lambda x : x[2])
 
 		#remove all edges but 1(keeps graph connected)
 		for i in range(0,len(cutset)-1):
@@ -59,7 +62,13 @@ def solve(G):
 			if(num_k==0):
 				break
 		#deal with the 2 partition of graphs and new s, t
-	#print(remove_edge_list)
+		s_list.append(s_list[partition_cnt])
+		s_list[partition_cnt+1].append(cutset[len(cutset)-1][1]) # 0 | 0,s | 0,s,sp 
+		t_list.append([cutset[len(cutset)-1][0]])
+		t_list[partition_cnt+1].append(t_list[partition_cnt])
+		partition_cnt+=1
+
+	print(remove_edge_list)
 	return remove_edge_list
 
 
