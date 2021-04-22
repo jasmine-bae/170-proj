@@ -43,7 +43,8 @@ def solve(G):
 	partition_cnt = 0
 	while(num_k>0 and num_c >0):
 		# get the set of edges in the min cut
-		max_cut_val = 0
+		# compare all partitions of the graph and only do the max min cut of all partitions(can be optimized by storing paritions in a list/priority queue)
+		max_cut_val = -1
 		for i in range(0, len(s_list[partition_cnt])):
 			cut_val, partition = nx.minimum_cut(G, s_list[partition_cnt][i], t_list[partition_cnt][i])
 			if(cut_val>max_cut_val):
@@ -55,13 +56,18 @@ def solve(G):
 				cutset.sort(reverse = True, key = lambda x : x[2])
 
 		#remove all edges but 1(keeps graph connected)
+		#we don't check which nodes are disconnected yet. Can be done by checking adjacency list? 
 		for i in range(0,len(cutset)-1):
 			G.remove_edge(cutset[i][0], cutset[i][1])
 			remove_edge_list.append((cutset[i][0], cutset[i][1]))
 			num_k -= 1
 			if(num_k==0):
 				break
-		#deal with the 2 partition of graphs and new s, t
+
+		# Deal with the 2 partition of graphs and new s, t
+		# Say we partition a graph S---Split--Split----T
+		# Then We need S_list and T_list to be S---T--S----T
+		# We need to keep edge to not disconnect graph
 		s_list.append(s_list[partition_cnt])
 		s_list[partition_cnt+1].append(cutset[len(cutset)-1][1]) # 0 | 0,s | 0,s,sp 
 		t_list.append([cutset[len(cutset)-1][0]])
