@@ -64,6 +64,14 @@ def solve(G):
 			num_k -= 1
 			if(num_k==0):
 				break
+			# Check if a node is disconnected and add to list
+			# could be more efficent
+			for node, val in G.degree():
+				if(val == 0):
+					num_c -=1
+					remove_city_list.append(node)
+				if(num_c==0):
+					break
 
 		# Deal with the 2 partition of graphs and new s, t
 		# Say we partition a graph S---Split--Split----T
@@ -74,8 +82,8 @@ def solve(G):
 		t_list.append([cutset[len(cutset)-1][0]])
 		t_list[partition_cnt+1].append(t_list[partition_cnt])
 		partition_cnt+=1
-
 	print(remove_edge_list)
+	print(remove_city_list)
 	return remove_city_list,remove_edge_list
 
 
