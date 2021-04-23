@@ -54,6 +54,7 @@ def solve(G):
 				    cutset.update((u, v, G[u][v]['capacity']) for v in nbrs if v in non_reachable)
 				cutset = list(cutset)
 				cutset.sort(reverse = True, key = lambda x : x[2])
+				max_cut_val = cut_val
 
 		#remove all edges but 1(keeps graph connected)
 		#we don't check which nodes are disconnected yet. Can be done by checking adjacency list? 
