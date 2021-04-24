@@ -6,6 +6,10 @@ from os.path import basename, normpath
 import glob
 
 
+#TODO: (jas) can we import this ??
+import random
+
+
 def solve(G):
 	"""
 	Args:
@@ -20,6 +24,7 @@ def solve(G):
 	#return parameters
 	remove_edge_list = []
 	remove_city_list = []
+	H = G.copy()
 
 	# set k and c accordingly
 	if(len(G)<=30):
@@ -35,99 +40,106 @@ def solve(G):
 	s_list = [[0]]
 	t_list = [[len(G)-1]]
 
-	#print(G.edges().data())
-	#set capacity to be 1/weight so that min cut priortizes includes shortest edges
-	for edge in G.edges().data():
-		G[edge[0]][edge[1]]['capacity'] = 1.0/edge[2]["weight"]
+#Jasmine's jank Dijsktra's
+	dist = [float('inf') for i in range(G.number_of_nodes())]
 	
-	partition_cnt = 0
-	while(num_k>0 and num_c >0):
-		if(partition_cnt>=100):
-			return
-		# get the set of edges in the min cut
-		# compare all partitions of the graph and only do the max min cut of all partitions(can be optimized by storing paritions in a list/priority queue)
-		max_cut_val = -1
-		#print(partition_cnt)
-		for i in range(0, len(s_list[partition_cnt])):
-			#print(s_list)
-			#print(t_list)
-			#print(str(s_list[partition_cnt][i]) + " " + str(t_list[partition_cnt][i]))
-			if(s_list[partition_cnt][i] == t_list[partition_cnt][i]):
-				continue
-			cut_val, partition = nx.minimum_cut(G, s_list[partition_cnt][i], t_list[partition_cnt][i])
-			if(cut_val>max_cut_val):
-				reachable, non_reachable = partition
-				cutset = set()
-				for u, nbrs in ((n, G[n]) for n in reachable):
-				    cutset.update((u, v, G[u][v]['capacity']) for v in nbrs if v in non_reachable)
-				cutset = list(cutset)
-				cutset.sort(reverse = True, key = lambda x : x[2])
-				max_cut_val = cut_val
+	#start from s, i'm going to pick randomly
+	start_node = random.randint(0,len(dist))
+	dist[start_node] = 0
 
-		#remove all edges but 1(keeps graph connected)
-		#we don't check which nodes are disconnected yet. Can be done by checking adjacency list? 
-		for i in range(0,len(cutset)-1):
-			G.remove_edge(cutset[i][0], cutset[i][1])
-			remove_edge_list.append((cutset[i][0], cutset[i][1]))
-			num_k -= 1
-			if(num_k==0):
-				break
-			# Check if a node is disconnected and add to list
-			# could be more efficent
-			for node, val in G.degree():
-				if(val == 0):
-					num_c -=1
-					remove_city_list.append(node)
-				if(num_c==0):
-					break
+	
 
-		# Deal with the 2 partition of graphs and new s, t
-		# Say we partition a graph S---Split--Split----T
-		# Then We need S_list and T_list to be S---T--S----T
-		# We need to keep edge to not disconnect graph
-		# PARTITION STEP BROKEN FIX THIS
-		remaining_edge = cutset[len(cutset)-1]
-		#print(remaining_edge)
-		s_list.append(s_list[partition_cnt].copy())
-		s_list[partition_cnt+1].append(cutset[len(cutset)-1][1]) # 0 | 0,s | 0,s,sp 
-		t_list.append([cutset[len(cutset)-1][0]])
-		t_list[partition_cnt+1].extend(t_list[partition_cnt])
-		partition_cnt+=1
+#---end---
+
+
+
+# Sarthak's Code 
+	# #print(G.edges().data())
+	# #set capacity to be 1/weight so that min cut priortizes includes shortest edges
+	# for edge in G.edges().data():
+	# 	H[edge[0]][edge[1]]['capacity'] = 1.0/edge[2]["weight"]
+	
+	# partition_cnt = 0
+	# while(num_k>0 and num_c >0):
+	# 	if(partition_cnt>=100):
+	# 		return
+	# 	# get the set of edges in the min cut
+	# 	# compare all partitions of the graph and only do the max min cut of all partitions(can be optimized by storing paritions in a list/priority queue)
+	# 	max_cut_val = -1
+	# 	#print(partition_cnt)
+	# 	for i in range(0, len(s_list[partition_cnt])):
+	# 		#print(s_list)
+	# 		#print(t_list)
+	# 		#print(str(s_list[partition_cnt][i]) + " " + str(t_list[partition_cnt][i]))
+	# 		if(s_list[partition_cnt][i] == t_list[partition_cnt][i]):
+	# 			continue
+	# 		cut_val, partition = nx.minimum_cut(H, s_list[partition_cnt][i], t_list[partition_cnt][i])
+	# 		if(cut_val>max_cut_val):
+	# 			reachable, non_reachable = partition
+	# 			cutset = set()
+	# 			for u, nbrs in ((n, H[n]) for n in reachable):
+	# 			    cutset.update((u, v, H[u][v]['capacity']) for v in nbrs if v in non_reachable)
+	# 			cutset = list(cutset)
+	# 			cutset.sort(reverse = True, key = lambda x : x[2])
+	# 			max_cut_val = cut_val
+
+	# 	#remove all edges but 1(keeps graph connected)
+	# 	#we don't check which nodes are disconnected yet. Can be done by checking adjacency list? 
+	# 	for i in range(0,len(cutset)-1):
+	# 		H.remove_edge(cutset[i][0], cutset[i][1])
+	# 		remove_edge_list.append((cutset[i][0], cutset[i][1]))
+	# 		num_k -= 1
+	# 		if(num_k==0):
+	# 			break
+	# 		# Check if a node is disconnected and add to list
+	# 		# could be more efficent
+	# 		for node, val in H.degree():
+	# 			if(val == 0):
+	# 				num_c -=1
+	# 				remove_city_list.append(node)
+	# 			if(num_c==0):
+	# 				break
+
+	# 	# Deal with the 2 partition of graphs and new s, t
+	# 	# Say we partition a graph S---Split--Split----T
+	# 	# Then We need S_list and T_list to be S---T--S----T
+	# 	# We need to keep edge to not disconnect graph
+	# 	# PARTITION STEP BROKEN FIX THIS
+	# 	remaining_edge = cutset[len(cutset)-1]
+	# 	#print(remaining_edge)
+	# 	s_list.append(s_list[partition_cnt].copy())
+	# 	s_list[partition_cnt+1].append(cutset[len(cutset)-1][1]) # 0 | 0,s | 0,s,sp 
+	# 	t_list.append([cutset[len(cutset)-1][0]])
+	# 	t_list[partition_cnt+1].extend(t_list[partition_cnt])
+	# 	partition_cnt+=1
+# *** end Sarthak's code
 		
-	print(remove_edge_list)
-	print(remove_city_list)
+	print("remove edge list: ", remove_edge_list)
+	print("remove city list: ", remove_city_list)
 	return remove_city_list, remove_edge_list
-
-
-    
-
-
-G = read_input_file("30.in")
-solve(G)
-
 
 # Here's an example of how to run your solver.
 
 # Usage: python3 solver.py test.in
 
-# if __name__ == '__main__':
-#     assert len(sys.argv) == 2
-#     path = sys.argv[1]
-#     G = read_input_file(path)
-#     c, k = solve(G)
-#     assert is_valid_solution(G, c, k)
-#     print("Shortest Path Difference: {}".format(calculate_score(G, c, k)))
-#     write_output_file(G, c, k, 'outputs/small-1.out')
+if __name__ == '__main__':
+    assert len(sys.argv) == 2
+    path = sys.argv[1]
+    G = read_input_file(path)
+    c, k = solve(G)
+    assert is_valid_solution(G, c, k)
+    print("Shortest Path Difference: {}".format(calculate_score(G, c, k)))
+    write_output_file(G, c, k, 'outputs/small-1.out')
 
 
 # For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
-if __name__ == '__main__':
-	inputs = glob.glob('inputs/small/*')
-	for input_path in inputs:
-		output_path = 'outputs/' + basename(normpath(input_path))[:-3] + '.out'
-		G = read_input_file(input_path)
-		c, k = solve(G)
-		assert is_valid_solution(G, c, k)
-		distance = calculate_score(G, c, k)
-		print(distance)
-		write_output_file(G, c, k, output_path)
+# if __name__ == '__main__':
+# 	inputs = glob.glob('inputs/small/*')
+# 	for input_path in inputs:
+# 		output_path = 'outputs/' + basename(normpath(input_path))[:-3] + '.out'
+# 		G = read_input_file(input_path)
+# 		c, k = solve(G)
+# 		assert is_valid_solution(G, c, k)
+# 		distance = calculate_score(G, c, k)
+# 		print(distance)
+# 		write_output_file(G, c, k, output_path)
