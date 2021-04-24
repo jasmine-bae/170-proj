@@ -42,10 +42,18 @@ def solve(G):
 	
 	partition_cnt = 0
 	while(num_k>0 and num_c >0):
+		if(partition_cnt>=100):
+			return
 		# get the set of edges in the min cut
 		# compare all partitions of the graph and only do the max min cut of all partitions(can be optimized by storing paritions in a list/priority queue)
 		max_cut_val = -1
+		#print(partition_cnt)
 		for i in range(0, len(s_list[partition_cnt])):
+			#print(s_list)
+			#print(t_list)
+			#print(str(s_list[partition_cnt][i]) + " " + str(t_list[partition_cnt][i]))
+			if(s_list[partition_cnt][i] == t_list[partition_cnt][i]):
+				continue
 			cut_val, partition = nx.minimum_cut(G, s_list[partition_cnt][i], t_list[partition_cnt][i])
 			if(cut_val>max_cut_val):
 				reachable, non_reachable = partition
@@ -77,14 +85,18 @@ def solve(G):
 		# Say we partition a graph S---Split--Split----T
 		# Then We need S_list and T_list to be S---T--S----T
 		# We need to keep edge to not disconnect graph
-		s_list.append(s_list[partition_cnt])
+		# PARTITION STEP BROKEN FIX THIS
+		remaining_edge = cutset[len(cutset)-1]
+		#print(remaining_edge)
+		s_list.append(s_list[partition_cnt].copy())
 		s_list[partition_cnt+1].append(cutset[len(cutset)-1][1]) # 0 | 0,s | 0,s,sp 
 		t_list.append([cutset[len(cutset)-1][0]])
-		t_list[partition_cnt+1].append(t_list[partition_cnt])
+		t_list[partition_cnt+1].extend(t_list[partition_cnt])
 		partition_cnt+=1
+		
 	print(remove_edge_list)
 	print(remove_city_list)
-	return remove_city_list,remove_edge_list
+	return remove_city_list, remove_edge_list
 
 
     
@@ -117,4 +129,5 @@ if __name__ == '__main__':
 		c, k = solve(G)
 		assert is_valid_solution(G, c, k)
 		distance = calculate_score(G, c, k)
+		print(distance)
 		write_output_file(G, c, k, output_path)
