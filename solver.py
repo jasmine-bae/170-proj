@@ -8,6 +8,7 @@ import glob
 
 #TODO: (jas) can we import this ??
 import random
+import heapq
 
 
 def solve(G):
@@ -41,21 +42,45 @@ def solve(G):
 	t_list = [[len(G)-1]]
 
 #Jasmine's jank Dijsktra's
-	dist = [float('inf') for i in range(G.number_of_nodes())]
+	#its 2 am and this doesnt work i give up
+	# dist = [float('inf') for i in range(G.number_of_nodes())]
+	# # prev = [-1 for i in range(G.number_of_nodes())]
+	# visited = set()
+	# path = set()
 	
-	#start from s, i'm going to pick randomly
-	start_node = random.randint(0,len(dist))
-	dist[start_node] = 0
+	# dist[0] = 0
+	# queue = [(0, 0)]
+	# path.add(0)
 
-	
+	# while queue:
+	# 	dist_u, u = heapq.heappop(queue)
+	# 	if u in visited: continue
+	# 	visited.add(u)
+	# 	dist[u] = dist_u
+	# 	if u == len(G)-1:
+	# 		path.add(u)
+	# 		print("shortestpath is : ", path)
+	# 		break
+	# 	for v in G[u]:
+	# 		if v in visited: continue
+	# 		if dist[v] > dist[u] + G[u][v]['weight']:
+	# 			dist[v] = dist[u] + G[u][v]['weight']
+	# 			# prev[v] = u
+	# 			heapq.heappush(queue, (dist[v], v))
+	# 			path.add(v)
+	#I just realized we can just do aaa
+	print("shortest path actually is: " , nx.algorithms.shortest_paths.weighted.dijkstra_path(G, 0, len(G)-1), " with weight :", nx.dijkstra_path_length(G, 0, len(G)-1))
+	shortest_path = nx.algorithms.shortest_paths.weighted.dijkstra_path(G, 0, len(G)-1)
+
+	#remove nodes/edges along the path to make it move somewhere else
 
 #---end---
 
 
 
 # Sarthak's Code 
-	# #print(G.edges().data())
-	# #set capacity to be 1/weight so that min cut priortizes includes shortest edges
+	# print(G.edges().data())
+	# set capacity to be 1/weight so that min cut priortizes includes shortest edges
 	# for edge in G.edges().data():
 	# 	H[edge[0]][edge[1]]['capacity'] = 1.0/edge[2]["weight"]
 	
@@ -116,6 +141,7 @@ def solve(G):
 		
 	print("remove edge list: ", remove_edge_list)
 	print("remove city list: ", remove_city_list)
+	print("new shortest path is:", nx.algorithms.shortest_paths.weighted.dijkstra_path(H, 0, len(G)-1))
 	return remove_city_list, remove_edge_list
 
 # Here's an example of how to run your solver.
