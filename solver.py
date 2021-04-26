@@ -110,7 +110,7 @@ def solve(G):
 					path_length = path_length_new
 					dists = [(length, val, key) for (length, val, key) in dists if val == dists[i][1]]
 					c_count += 1
-	print(dists)
+	# print(dists)
 #---end---
 
 
@@ -176,9 +176,9 @@ def solve(G):
 # 		partition_cnt+=1
 # # *** end Sarthak's code
 		
-	print("remove edge list: ", remove_edge_list)
-	print("remove city list: ", remove_city_list)
-	print("new shortest path is:", nx.algorithms.shortest_paths.weighted.dijkstra_path(H, 0, len(G)-1), "with weight: ", nx.dijkstra_path_length(H, 0, len(G)-1))
+	# print("remove edge list: ", remove_edge_list)
+	# print("remove city list: ", remove_city_list)
+	# print("new shortest path is:", nx.algorithms.shortest_paths.weighted.dijkstra_path(H, 0, len(G)-1), "with weight: ", nx.dijkstra_path_length(H, 0, len(G)-1))
 	return remove_city_list, remove_edge_list
 
 # Here's an example of how to run your solver.
