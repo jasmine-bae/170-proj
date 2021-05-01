@@ -8,8 +8,6 @@ from collections import Counter
 import os
 
 import numpy as np
-
-#TODO: (jas) can we import this ??
 import random
 import heapq
 
@@ -92,37 +90,6 @@ def solve(G):
 		num_k = 100
 		num_c = 5
 
-	
-
-#Jasmine's jank Dijsktra's
-	#its 2 am and this doesnt work i give up
-	# dist = [float('inf') for i in range(G.number_of_nodes())]
-	# # prev = [-1 for i in range(G.number_of_nodes())]
-	# visited = set()
-	# path = set()
-	
-	# dist[0] = 0
-	# queue = [(0, 0)]
-	# path.add(0)
-
-	# while queue:
-	# 	dist_u, u = heapq.heappop(queue)
-	# 	if u in visited: continue
-	# 	visited.add(u)
-	# 	dist[u] = dist_u
-	# 	if u == len(G)-1:
-	# 		path.add(u)
-	# 		print("shortestpath is : ", path)
-	# 		break
-	# 	for v in G[u]:
-	# 		if v in visited: continue
-	# 		if dist[v] > dist[u] + G[u][v]['weight']:
-	# 			dist[v] = dist[u] + G[u][v]['weight']
-	# 			# prev[v] = u
-	# 			heapq.heappush(queue, (dist[v], v))
-	# 			path.add(v)
-	#I just realized we can just do aaa
-	# print("shortest path actually is: " , nx.algorithms.shortest_paths.weighted.dijkstra_path(G, 0, len(G)-1), " with weight :", nx.dijkstra_path_length(G, 0, len(G)-1))
 	'''
 	shortest_path = nx.algorithms.shortest_paths.weighted.dijkstra_path(G, 0, len(G)-1)
 	path_length = nx.dijkstra_path_length(G, 0, len(G)-1)
@@ -261,7 +228,12 @@ def solve(G):
 
 	#big bad graph(s) time aaaa
 	#notes: find node that repeats the most time, remove that node, run the whole thing again
+
+	#heuristic T
+	T = 1000
+	
 	nodes_from_edges, short_path1, remove_edge_list = greedy_edges(G, num_k)
+	# to_return = nx.algorithms.shortest_paths.weighted.dijkstra_path_length(G, 0, len(G)-1)
 	#a = Counter(nodes_from_edges)
 	P = G.copy()
 	#print(nodes_from_edges)
@@ -275,33 +247,38 @@ def solve(G):
 			P.remove_node(common_node)
 			if nx.algorithms.shortest_paths.generic.has_path(P, 0, len(G)-1) and nx.is_connected(P):
 				shortest_path = nx.algorithms.shortest_paths.weighted.dijkstra_path_length(P, 0, len(G)-1)
-				#if shortest_path >= short_path1:
-				remove_city_list.append(common_node)
-				num_c -= 1
-				maxK = num_k - len(remove_edge_list)
-				nodescopy, short_path2, edge2 = greedy_edges(P, num_k)
-				remove_edge_list = edge2
-				#while (short_path2 > short_path1) and (common_node and common_node != 0 and common_node != (len(G) -1)) and num_c > 0:
-				while (common_node and common_node != 0 and common_node != (len(G) -1)) and num_c > 0:
-					H = P.copy()
+				prob = np.exp((short_path1 - shortest_path)/(-T))
+				if (shortest_path >= short_path1) or (random.random() < prob):
+					remove_city_list.append(common_node)
+					num_c -= 1
+					maxK = num_k - len(remove_edge_list)
+					nodescopy, short_path2, edge2 = greedy_edges(P, num_k)
 					remove_edge_list = edge2
-					short_path1 = short_path2
-					common_node = np.argmax(np.asarray(nodescopy))
-					#print(nodescopy)
-					if(not P.has_node(common_node)):
-						break
-					#a = Counter(nodescopy)
-					#common_node = [i[0] for i in a.most_common()][0]
-					if common_node and common_node != 0 and common_node != (len(G) -1) and P.has_node(common_node):
-						P.remove_node(common_node)
-						if not nx.is_connected(P):
-							continue
-						if nx.algorithms.shortest_paths.generic.has_path(P, 0, len(G)-1):
-							remove_city_list.append(common_node)
-							num_c -= 1
-						maxK = num_k - len(edge2)
-						nodescopy, short_path2, edge2 = greedy_edges(P, num_k)
-						remove_edge_list = edge2
+					#while (short_path2 > short_path1) and (common_node and common_node != 0 and common_node != (len(G) -1)) and num_c > 0:
+					while (common_node and common_node != 0 and common_node != (len(G) -1)) and num_c > 0:
+						T-= 50
+						prob = np.exp((short_path1 - shortest_path)/(-T))
+						print(prob)
+						if (short_path2 >= short_path1) or (random.random() < prob): 
+							H = P.copy()
+							remove_edge_list = edge2
+							short_path1 = short_path2
+							common_node = np.argmax(np.asarray(nodescopy))
+							#print(nodescopy)
+							if(not P.has_node(common_node)):
+								break
+							#a = Counter(nodescopy)
+							#common_node = [i[0] for i in a.most_common()][0]
+							if common_node and common_node != 0 and common_node != (len(G) -1) and P.has_node(common_node):
+								P.remove_node(common_node)
+								if not nx.is_connected(P):
+									continue
+								if nx.algorithms.shortest_paths.generic.has_path(P, 0, len(G)-1):
+									remove_city_list.append(common_node)
+									num_c -= 1
+								maxK = num_k - len(edge2)
+								nodescopy, short_path2, edge2 = greedy_edges(P, num_k)
+								remove_edge_list = edge2
 
 
 			
@@ -418,17 +395,16 @@ def solve(G):
 #     print("Shortest Path Difference: {}".format(calculate_score(G, c, k)))
 #     write_output_file(G, c, k, 'outputs/small-1.out')
 
-if __name__ == '__main__':
-	inputs = glob.glob('inputs/medium/*')
-	for input_path in inputs:
-		output_path = 'outputs/' + basename(normpath(input_path))[:-3] + '.out'
-		G = read_input_file(input_path)
-		c, k = solve(G)
-		assert is_valid_solution(G, c, k)
-		distance = calculate_score(G, c, k)
-		print(distance)
-		write_output_file(G, c, k, output_path)
-'''
+# if __name__ == '__main__':
+# 	inputs = glob.glob('inputs/medium/*')
+# 	for input_path in inputs:
+# 		output_path = 'outputs/' + basename(normpath(input_path))[:-3] + '.out'
+# 		G = read_input_file(input_path)
+# 		c, k = solve(G)
+# 		assert is_valid_solution(G, c, k)
+# 		distance = calculate_score(G, c, k)
+# 		print(distance)
+# 		write_output_file(G, c, k, output_path)
 
 
 # For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
@@ -437,6 +413,7 @@ if __name__ == "__main__":
     inputs = sorted(inputs)
     os.rename("current_distances.txt", "old_distances.txt")
     curr = open("current_distances.txt", "w")
+    # short = open("shortest_distances.txt", "w")
     delta = open("delta_distances.txt", "w")
     old = open("old_distances.txt", "r")
     delta_dist_array = []
@@ -447,13 +424,18 @@ if __name__ == "__main__":
         assert is_valid_solution(G, c, k)
         distance = calculate_score(G, c, k)
         curr.write(input_path.split("/")[2] + ": " + str(distance) + "\n")
+        # short.write(input_path.split("/")[2] + ": " + str(shortest) + "\n")
         delta_dist_array.append(distance)
         write_output_file(G, c, k, output_path)
     curr.close()
+    # short.close()
+    short = open("shortest_distances.txt", "r")
+
     i = 0
-    for line in old:
+    for line in short:
         old_score = float(line.split(": ")[1][:-1])
-        delta_dist_array[i] -= old_score
+        delta_dist_array[i] = (delta_dist_array[i] - old_score)/old_score
         delta.write(line.split(": ")[0] + ": " + str(delta_dist_array[i]) + "\n")
         i += 1
-'''
+    print(np.mean(delta_dist_array))
+    short.close()
