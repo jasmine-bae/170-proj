@@ -115,8 +115,8 @@ def solve(G):
 	'''
 
 
-	#SARTHAK GREEDILY SELECT BEST EDGE REMOVAL IN SHORTEST PATH
-	'''
+	#SARTHAK GREEDILY SELECT BEST EDGE REMOVAL IN SHORTEST PATH for small and medium
+	
 	shortest_path = nx.algorithms.shortest_paths.weighted.dijkstra_path(G, 0, len(G)-1)
 	path_length = nx.dijkstra_path_length(G, 0, len(G)-1)
 
@@ -126,34 +126,86 @@ def solve(G):
 	dists.sort()
 	k_count = 0
 	c_count = 0
+	best_path_city = shortest_path
+	best_path_road = shortest_path
+	best_path = shortest_path
 	while(num_k>0 and num_c >0):
 		if i >= len(dists): break
-		if num_k < k_count: break
-		if num_c < c_count: break
-		curr_path_len_best = path_length
+		if num_k -1 < k_count: break
+		if num_c -1 < c_count: break
+		curr_path_len_best_road = path_length
+		curr_path_len_best_city = path_length
 		B = H.copy()
+		C = H.copy()
 		best_edge = (0,0)
-		best_path = shortest_path
+		best_city = -1
+		# print(best_path)
+		#best path greedy
 		for i in range(0, len(dists)):
 			J = H.copy()
 			J.remove_edge(dists[i][1], dists[i][2])
+			if nx.is_connected(J) == False:
+				continue
 			if nx.algorithms.shortest_paths.generic.has_path(J, 0, len(G)-1):
 				path_length_new = nx.dijkstra_path_length(J, 0, len(G)-1)
-				if path_length_new > curr_path_len_best:
+				if path_length_new > curr_path_len_best_road:
 					B = J.copy()
 					best_edge = (dists[i][1], dists[i][2])
-					curr_path_len_best = path_length_new
-					best_path = nx.algorithms.shortest_paths.weighted.dijkstra_path(J, 0, len(G)-1)	
-		H = B.copy()
+					curr_path_len_best_road = path_length_new
+					best_path_road = nx.algorithms.shortest_paths.weighted.dijkstra_path(J, 0, len(G)-1)
+
+		#best city greedy
+		# print(best_path)
+		for j in best_path:
+			if j == 0 or j == (len(G) -1):
+				continue
+			D = H.copy()
+			D.remove_node(j)
+			if nx.is_connected(D) == False:
+				continue
+			if nx.algorithms.shortest_paths.generic.has_path(D, 0, len(G)-1):
+				path_length_new = nx.dijkstra_path_length(D, 0, len(G)-1)
+				if path_length_new > curr_path_len_best_city:
+					C = D.copy()
+					best_city = j
+					curr_path_len_best_city = path_length_new
+					best_path_city = nx.algorithms.shortest_paths.weighted.dijkstra_path(D, 0, len(G)-1)	
+					# print(best_path_city)
+					
+
 		if(best_edge ==(0,0)):
 			break
-		remove_edge_list.append(best_edge)
-		path_length = curr_path_len_best
-		k_count += 1
+		if best_city == -1:
+			break
+		
+		if (curr_path_len_best_city - 20< curr_path_len_best_road):
+			H = B.copy()
+			remove_edge_list.append(best_edge)
+			path_length = curr_path_len_best_road
+			best_path = best_path_road[:]
+			k_count += 1
+			# print("Deleted: ", best_edge)
+			
+		else:
+			H = C.copy()
+			# H.remove_node(best_city)
+			remove_city_list.append(best_city)
+			path_length = curr_path_len_best_city
+			# print("here" , best_path_city)
+			best_path = best_path_city[:]
+			c_count += 1
+			# print("Deleted: ", best_city)
 		dists = []
 		for i in range(len(best_path)-1):
 			dists.append((H[best_path[i]][best_path[i+1]]['weight'], best_path[i], best_path[i+1]))	
 		dists.sort()
+		# print(best_path)
+		if nx.is_connected(H) == False:
+			print("oh no")
+			break
+
+
+		
 	'''
 
 
@@ -245,9 +297,10 @@ def solve(G):
 		#t_list[partition_cnt+1].extend(t_list[partition_cnt])
 		partition_cnt+=1
 # *** end Sarthak's code
+'''
 		
-	#print("remove edge list: ", remove_edge_list)
-	#print("remove city list: ", remove_city_list)
+	print("remove edge list: ", remove_edge_list)
+	print("remove city list: ", remove_city_list)
 	# print("new shortest path is:", nx.algorithms.shortest_paths.weighted.dijkstra_path(H, 0, len(G)-1), "with weight: ", nx.dijkstra_path_length(H, 0, len(G)-1))
 	return remove_city_list, remove_edge_list
 
@@ -267,7 +320,7 @@ def solve(G):
 
 # For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
 if __name__ == '__main__':
-	inputs = glob.glob('inputs/large/*')
+	inputs = glob.glob('inputs/small/*')
 	for input_path in inputs:
 		output_path = 'outputs/' + basename(normpath(input_path))[:-3] + '.out'
 		G = read_input_file(input_path)
