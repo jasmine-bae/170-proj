@@ -4,12 +4,57 @@ from utils import is_valid_solution, calculate_score
 import sys
 from os.path import basename, normpath
 import glob
+from collections import Counter
 
 
 #TODO: (jas) can we import this ??
 import random
 import heapq
 
+def greedy_edges(OGgraph, num_k):
+	H = OGgraph.copy()
+	nodes_from_edges = []
+	remove_edge_list = []
+	shortest_path = nx.algorithms.shortest_paths.weighted.dijkstra_path(OGgraph, 0, len(G)-1)
+	path_length = nx.dijkstra_path_length(OGgraph, 0, len(G)-1)
+	dists = []
+	for i in range(len(shortest_path)-1):
+		dists.append((H[shortest_path[i]][shortest_path[i+1]]['weight'], shortest_path[i], shortest_path[i+1]))	
+	dists.sort()
+	k_count = 0
+	c_count = 0
+	while(num_k>0):
+		if i >= len(dists): break
+		if num_k -1< k_count: break
+		curr_path_len_best = path_length
+		B = H.copy()
+		best_edge = (0,0)
+		best_path = shortest_path
+		for i in range(0, len(dists)):
+			J = H.copy()
+			J.remove_edge(dists[i][1], dists[i][2])
+			if nx.is_connected(J) == False:
+	 			continue
+			if nx.algorithms.shortest_paths.generic.has_path(J, 0, len(G)-1):
+				path_length_new = nx.dijkstra_path_length(J, 0, len(G)-1)
+				if path_length_new > curr_path_len_best:
+					B = J.copy()
+					best_edge = (dists[i][1], dists[i][2])
+					curr_path_len_best = path_length_new
+					best_path = nx.algorithms.shortest_paths.weighted.dijkstra_path(J, 0, len(G)-1)	
+		H = B.copy()
+		if(best_edge ==(0,0)):
+			break
+		remove_edge_list.append(best_edge)
+		nodes_from_edges.append(best_edge[0])
+		nodes_from_edges.append(best_edge[1])
+		path_length = curr_path_len_best
+		k_count += 1
+		dists = []
+		for i in range(len(best_path)-1):
+			dists.append((H[best_path[i]][best_path[i+1]]['weight'], best_path[i], best_path[i+1]))	
+		dists.sort()
+	return nodes_from_edges, path_length, remove_edge_list
 
 def solve(G):
 	"""
@@ -115,95 +160,133 @@ def solve(G):
 	'''
 
 
-	#SARTHAK GREEDILY SELECT BEST EDGE REMOVAL IN SHORTEST PATH for small and medium
+	# GREEDILY SELECT BEST EDGE REMOVAL IN SHORTEST PATH for small and medium
 	
-	shortest_path = nx.algorithms.shortest_paths.weighted.dijkstra_path(G, 0, len(G)-1)
-	path_length = nx.dijkstra_path_length(G, 0, len(G)-1)
+	# shortest_path = nx.algorithms.shortest_paths.weighted.dijkstra_path(G, 0, len(G)-1)
+	# path_length = nx.dijkstra_path_length(G, 0, len(G)-1)
 
-	dists = []
-	for i in range(len(shortest_path)-1):
-		dists.append((H[shortest_path[i]][shortest_path[i+1]]['weight'], shortest_path[i], shortest_path[i+1]))	
-	dists.sort()
-	k_count = 0
-	c_count = 0
-	best_path_city = shortest_path
-	best_path_road = shortest_path
-	best_path = shortest_path
-	while(num_k>0 and num_c >0):
-		if i >= len(dists): break
-		if num_k -1 < k_count: break
-		if num_c -1 < c_count: break
-		curr_path_len_best_road = path_length
-		curr_path_len_best_city = path_length
-		B = H.copy()
-		C = H.copy()
-		best_edge = (0,0)
-		best_city = -1
-		# print(best_path)
-		#best path greedy
-		for i in range(0, len(dists)):
-			J = H.copy()
-			J.remove_edge(dists[i][1], dists[i][2])
-			if nx.is_connected(J) == False:
-				continue
-			if nx.algorithms.shortest_paths.generic.has_path(J, 0, len(G)-1):
-				path_length_new = nx.dijkstra_path_length(J, 0, len(G)-1)
-				if path_length_new > curr_path_len_best_road:
-					B = J.copy()
-					best_edge = (dists[i][1], dists[i][2])
-					curr_path_len_best_road = path_length_new
-					best_path_road = nx.algorithms.shortest_paths.weighted.dijkstra_path(J, 0, len(G)-1)
+	# dists = []
+	# for i in range(len(shortest_path)-1):
+	# 	dists.append((H[shortest_path[i]][shortest_path[i+1]]['weight'], shortest_path[i], shortest_path[i+1]))	
+	# dists.sort()
+	# k_count = 0
+	# c_count = 0
+	# best_path_city = shortest_path
+	# best_path_road = shortest_path
+	# best_path = shortest_path
+	# while(num_k>0 and num_c >0):
+	# 	if i >= len(dists): break
+	# 	if num_k -1 < k_count: break
+	# 	if num_c -1 < c_count: break
+	# 	curr_path_len_best_road = path_length
+	# 	curr_path_len_best_city = path_length
+	# 	B = H.copy()
+	# 	C = H.copy()
+	# 	best_edge = (0,0)
+	# 	best_city = -1
+	# 	# print(best_path)
+	# 	#best path greedy
+	# 	for i in range(0, len(dists)):
+	# 		J = H.copy()
+	# 		J.remove_edge(dists[i][1], dists[i][2])
+	# 		if nx.is_connected(J) == False:
+	# 			continue
+	# 		if nx.algorithms.shortest_paths.generic.has_path(J, 0, len(G)-1):
+	# 			path_length_new = nx.dijkstra_path_length(J, 0, len(G)-1)
+	# 			if path_length_new > curr_path_len_best_road:
+	# 				B = J.copy()
+	# 				best_edge = (dists[i][1], dists[i][2])
+	# 				curr_path_len_best_road = path_length_new
+	# 				best_path_road = nx.algorithms.shortest_paths.weighted.dijkstra_path(J, 0, len(G)-1)
 
-		#best city greedy
-		# print(best_path)
-		for j in best_path:
-			if j == 0 or j == (len(G) -1):
-				continue
-			D = H.copy()
-			D.remove_node(j)
-			if nx.is_connected(D) == False:
-				continue
-			if nx.algorithms.shortest_paths.generic.has_path(D, 0, len(G)-1):
-				path_length_new = nx.dijkstra_path_length(D, 0, len(G)-1)
-				if path_length_new > curr_path_len_best_city:
-					C = D.copy()
-					best_city = j
-					curr_path_len_best_city = path_length_new
-					best_path_city = nx.algorithms.shortest_paths.weighted.dijkstra_path(D, 0, len(G)-1)	
-					# print(best_path_city)
+	# 	#best city greedy
+	# 	# print(best_path)
+	# 	for j in best_path:
+	# 		if j == 0 or j == (len(G) -1):
+	# 			continue
+	# 		D = H.copy()
+	# 		D.remove_node(j)
+	# 		if nx.is_connected(D) == False:
+	# 			continue
+	# 		if nx.algorithms.shortest_paths.generic.has_path(D, 0, len(G)-1):
+	# 			path_length_new = nx.dijkstra_path_length(D, 0, len(G)-1)
+	# 			if path_length_new > curr_path_len_best_city:
+	# 				C = D.copy()
+	# 				best_city = j
+	# 				curr_path_len_best_city = path_length_new
+	# 				best_path_city = nx.algorithms.shortest_paths.weighted.dijkstra_path(D, 0, len(G)-1)	
+	# 				# print(best_path_city)
 					
 
-		if(best_edge ==(0,0)):
-			break
-		if best_city == -1:
-			break
+	# 	if(best_edge ==(0,0)):
+	# 		break
+	# 	if best_city == -1:
+	# 		break
 		
-		if (curr_path_len_best_city - 20< curr_path_len_best_road):
-			H = B.copy()
-			remove_edge_list.append(best_edge)
-			path_length = curr_path_len_best_road
-			best_path = best_path_road[:]
-			k_count += 1
-			# print("Deleted: ", best_edge)
+	# 	if (curr_path_len_best_city - 20< curr_path_len_best_road):
+	# 		H = B.copy()
+	# 		remove_edge_list.append(best_edge)
+	# 		path_length = curr_path_len_best_road
+	# 		best_path = best_path_road[:]
+	# 		k_count += 1
+	# 		# print("Deleted: ", best_edge)
 			
-		else:
-			H = C.copy()
-			# H.remove_node(best_city)
-			remove_city_list.append(best_city)
-			path_length = curr_path_len_best_city
-			# print("here" , best_path_city)
-			best_path = best_path_city[:]
-			c_count += 1
-			# print("Deleted: ", best_city)
-		dists = []
-		for i in range(len(best_path)-1):
-			dists.append((H[best_path[i]][best_path[i+1]]['weight'], best_path[i], best_path[i+1]))	
-		dists.sort()
-		# print(best_path)
-		if nx.is_connected(H) == False:
-			print("oh no")
-			break
+	# 	else:
+	# 		H = C.copy()
+	# 		# H.remove_node(best_city)
+	# 		remove_city_list.append(best_city)
+	# 		path_length = curr_path_len_best_city
+	# 		# print("here" , best_path_city)
+	# 		best_path = best_path_city[:]
+	# 		c_count += 1
+	# 		# print("Deleted: ", best_city)
+	# 	dists = []
+	# 	for i in range(len(best_path)-1):
+	# 		dists.append((H[best_path[i]][best_path[i+1]]['weight'], best_path[i], best_path[i+1]))	
+	# 	dists.sort()
+	# 	# print(best_path)
+	# 	if nx.is_connected(H) == False:
+	# 		print("oh no")
+	# 		break
 
+
+	#big bad graph(s) time aaaa
+		#notes: find node that repeats the most time, remove that node, run the whole thing again
+	nodes_from_edges, short_path1, remove_edge_list = greedy_edges(G, num_k)
+	a = Counter(nodes_from_edges)
+	P = G.copy()
+	print(nodes_from_edges)
+	common = [i[0] for i in a.most_common()]
+	if common: 
+		common_node = common[0]
+		print(common_node)
+		if common_node and common_node != 0 and common_node != (len(G) -1):
+			P.remove_node(common_node)
+			if nx.algorithms.shortest_paths.generic.has_path(P, 0, len(G)-1) and nx.is_connected(P):
+				shortest_path = nx.algorithms.shortest_paths.weighted.dijkstra_path_length(P, 0, len(G)-1)
+				if shortest_path >= short_path1:
+					remove_city_list.append(common_node)
+					num_c -= 1
+					maxK = num_k - len(remove_edge_list)
+					nodescopy, short_path2, edge2 = greedy_edges(P, maxK)
+					while (short_path2 > short_path1) and (common_node and common_node != 0 and common_node != (len(G) -1)) and num_c > 0:
+						H = P.copy()
+						remove_edge_list = edge2
+						short_path1 = short_path2
+						a = Counter(nodescopy)
+						common_node = [i[0] for i in a.most_common()][0]
+						if common_node and common_node != 0 and common_node != (len(G) -1):
+							P.remove_node(common_node)
+							if not nx.is_connected(P):
+								break
+							if nx.algorithms.shortest_paths.generic.has_path(P, 0, len(G)-1):
+								remove_city_list.append(common_node)
+								num_c -= 1
+							maxK = num_k - len(edge2)
+							nodescopy, short_path2, edge2 = greedy_edges(P, maxK)
+
+
+			
 
 		
 	'''
@@ -320,7 +403,7 @@ def solve(G):
 
 # For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
 if __name__ == '__main__':
-	inputs = glob.glob('inputs/small/*')
+	inputs = glob.glob('inputs/large/*')
 	for input_path in inputs:
 		output_path = 'outputs/' + basename(normpath(input_path))[:-3] + '.out'
 		G = read_input_file(input_path)
@@ -329,3 +412,5 @@ if __name__ == '__main__':
 		distance = calculate_score(G, c, k)
 		print(distance)
 		write_output_file(G, c, k, output_path)
+
+
