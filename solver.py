@@ -6,6 +6,7 @@ from os.path import basename, normpath
 import glob
 from collections import Counter
 import os
+import math
 
 import numpy as np
 import random
@@ -24,6 +25,8 @@ def greedy_edges(OGgraph, num_k):
 	k_count = 0
 	c_count = 0
 	heuristic = 1
+
+	T = 1000
 	while(num_k>0):
 		if i >= len(dists): break
 		if num_k -1< k_count: break
@@ -39,11 +42,19 @@ def greedy_edges(OGgraph, num_k):
 				continue
 			if nx.algorithms.shortest_paths.generic.has_path(J, 0, len(G)-1):
 				path_length_new = nx.dijkstra_path_length(J, 0, len(G)-1)
+				prob = math.exp((curr_path_len_best - path_length_new)/(-T))
 				if path_length_new > curr_path_len_best:
 					B = J.copy()
 					best_edge = (dists[i][1], dists[i][2])
 					curr_path_len_best = path_length_new
 					best_path = nx.algorithms.shortest_paths.weighted.dijkstra_path(J, 0, len(G)-1)	
+				elif (random.random() < prob):
+					T*= .98
+					B = J.copy()
+					best_edge = (dists[i][1], dists[i][2])
+					curr_path_len_best = path_length_new
+					best_path = nx.algorithms.shortest_paths.weighted.dijkstra_path(J, 0, len(G)-1)	
+				
 		H = B.copy()
 		if(best_edge ==(0,0)):
 			#print("HELLO IM BACK")
