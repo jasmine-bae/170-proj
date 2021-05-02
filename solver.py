@@ -11,6 +11,7 @@ from itertools import islice
 import numpy as np
 import random
 import heapq
+from itertools import islice
 
 
 def greedy_edges(OGgraph, num_k, num_c):
@@ -408,6 +409,110 @@ def create_heuristic(Ograph, num_edge, num_city):
 
     return remove_city_list, remove_edge_list
 
+def k_shortest_paths(G, source, target, k, weight=None):
+    return list(islice(nx.shortest_simple_paths(G, source, target, weight=weight), k))
+
+
+def create_heuristic(Ograph, num_edge, num_city):
+    edges_removed = 0
+    cities_removed = 0
+    remove_edge_list = []
+    remove_city_list = []
+
+    batch = 6
+    used_node = False
+    while(edges_removed<num_edge or cities_removed<num_city):
+        paths = k_shortest_paths(Ograph, 0, len(G)-1, batch, weight='weight')
+        edge_her = {}
+        city_her = {}
+        her_cnt = batch*batch*batch
+        #her_cnt = 1
+        for path in paths:
+            dists = []
+            for i in range(len(path)-1):
+                city_her[path[i]] = city_her.get(path[i], 1) + her_cnt
+                edge_her[(path[i], path[i+1])] = edge_her.get((path[i], path[i+1]), 1) + her_cnt #1/her_cnt
+            if her_cnt == batch*batch*batch:
+                her_cnt /= batch*.7
+            her_cnt -= batch/2
+            #her_cnt +=1
+        edge_her = dict(sorted(edge_her.items(), key=lambda item: item[1], reverse = True))
+
+        J = Ograph.copy()
+        H = Ograph.copy()
+        edge_iter = iter(edge_her)
+        city_iter = iter(city_her)
+        best_edge = None
+        best_node = None
+
+        i = 0
+        while(i < 1):
+            if(edges_removed >= num_edge):
+                break
+            C = J.copy()
+            remove_edge = next(edge_iter, None)
+            if(remove_edge == None):
+                break
+            if(not C.has_node(remove_edge[1]) or not C.has_node(remove_edge[0])):
+                continue
+            if(not C.has_edge(remove_edge[0], remove_edge[1])):
+                continue
+            C.remove_edge(remove_edge[0], remove_edge[1])
+            if(nx.is_connected(C)):
+                best_edge = remove_edge
+                J = C.copy()
+                i+=1
+            else:
+                continue
+        edge_graph = J.copy()
+        
+        i = 0
+        while(i < 1):
+            if(cities_removed >= num_city):
+                break
+            C = H.copy()
+            remove_city = next(city_iter, None)
+            if(remove_city == None):
+                break
+            if(not C.has_node(remove_city)):
+                continue
+            if(remove_city == 0 or remove_city == len(G)-1):
+                continue
+            C.remove_node(remove_city)
+            if(nx.is_connected(C)):
+                best_node = remove_city
+                H = C.copy()
+                i+=1
+            else:
+                continue
+        if(best_node != None):
+            node_graph = H.copy()
+            node_cost = nx.dijkstra_path_length(node_graph, 0, len(G)-1)
+            edge_cost = nx.dijkstra_path_length(edge_graph, 0, len(G)-1)
+            #try comparing heuristics instead of costs
+            if(best_edge == None or node_cost>edge_cost):
+                print(node_cost, " ", edge_cost)
+                remove_city_list.append(best_node)
+                cities_removed +=1
+                temp = remove_edge_list.copy()
+                for edge in temp:
+                    if(edge[0] == best_node or edge[1] == best_node):
+                        remove_edge_list.remove(edge)
+                        edges_removed-=1
+                Ograph = node_graph.copy()
+            else:
+                if(best_edge != None):
+                    remove_edge_list.append(best_edge)
+                    edges_removed +=1
+                    Ograph = edge_graph.copy()
+        elif(best_edge != None):
+            remove_edge_list.append(best_edge)
+            edges_removed +=1
+            Ograph = edge_graph.copy()
+        else:
+            break
+    return remove_city_list, remove_edge_list
+
 
 def greedy_all_shortest_edges(G, num_k, num_c):
     all_paths = list(nx.all_shortest_paths(G, 0, len(G) - 1))
@@ -573,7 +678,7 @@ def min_cut_life(G, num_k, num_c):
 
 # For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
 if __name__ == "__main__":
-    inputs = glob.glob("inputs/small/*")
+    inputs = glob.glob("inputs/medium/*")
     inputs = sorted(inputs)
     os.rename("current_distances.txt", "old_distances.txt")
     curr = open("current_distances.txt", "w")
