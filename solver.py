@@ -51,7 +51,7 @@ def greedy_edges(OGgraph, num_k, num_c):
                 continue
             if nx.algorithms.shortest_paths.generic.has_path(J, 0, len(G) - 1):
                 path_length_new = nx.dijkstra_path_length(J, 0, len(G) - 1)
-                prob = math.exp((curr_path_len_best - path_length_new) / (-T))
+                # prob = math.exp((curr_path_len_best - path_length_new) / (-T))
                 if path_length_new > curr_path_len_best:
                     B = J.copy()
                     best_edge = (dists[i][1], dists[i][2])
@@ -59,14 +59,14 @@ def greedy_edges(OGgraph, num_k, num_c):
                     best_path = nx.algorithms.shortest_paths.weighted.dijkstra_path(
                         J, 0, len(G) - 1
                     )
-                elif random.random() < prob:
-                    T *= 0.98
-                    B = J.copy()
-                    best_edge = (dists[i][1], dists[i][2])
-                    curr_path_len_best = path_length_new
-                    best_path = nx.algorithms.shortest_paths.weighted.dijkstra_path(
-                        J, 0, len(G) - 1
-                    )
+                # elif random.random() < prob:
+                #     T *= 0.98
+                #     B = J.copy()
+                #     best_edge = (dists[i][1], dists[i][2])
+                #     curr_path_len_best = path_length_new
+                #     best_path = nx.algorithms.shortest_paths.weighted.dijkstra_path(
+                #         J, 0, len(G) - 1
+                #     )
 
         H = B.copy()
         if best_edge == (0, 0):
@@ -92,7 +92,9 @@ def greedy_edges(OGgraph, num_k, num_c):
 
 def greedy_best_edge_removal_small_medium(OGgraph, num_k, num_c):
     # GREEDILY SELECT BEST EDGE REMOVAL IN SHORTEST PATH for small and medium
-
+    H = G.copy()
+    remove_edge_list = []
+    remove_city_list = []
     shortest_path = nx.algorithms.shortest_paths.weighted.dijkstra_path(G, 0, len(G) - 1)
     path_length = nx.dijkstra_path_length(G, 0, len(G) - 1)
 
@@ -166,7 +168,7 @@ def greedy_best_edge_removal_small_medium(OGgraph, num_k, num_c):
         if best_city == -1:
             break
 
-        if curr_path_len_best_city - 20 < curr_path_len_best_road:
+        if curr_path_len_best_city< curr_path_len_best_road:
             H = B.copy()
             remove_edge_list.append(best_edge)
             path_length = curr_path_len_best_road
@@ -194,16 +196,17 @@ def greedy_best_edge_removal_small_medium(OGgraph, num_k, num_c):
         if nx.is_connected(H) == False:
             print("oh no")
             break
+    return remove_city_list,remove_edge_list
 
 
 def solve(G):
     """
-	Args:
-		G: networkx.Graph
-	Returns:
-		c: list of cities to remove
-		k: list of edges to remove
-	"""
+    Args:
+        G: networkx.Graph
+    Returns:
+        c: list of cities to remove
+        k: list of edges to remove
+    """
     # pass
     # A = nx.adjacency_matrix(G).todense()
 
@@ -228,22 +231,39 @@ def solve(G):
     # big bad graph(s) time aaaa
     # notes: find node that repeats the most time, remove that node, run the whole thing again
 
-
 def simulated_annealing(G, num_k, num_c):
+
+    remove_edge_list = []
+    remove_city_list = []
+    H = G.copy()
+    if len(G) <= 30:
+        num_k = 15
+        num_c = 1
+    elif len(G) <= 50:
+        num_k = 50
+        num_c = 3
+    else:
+        num_k = 100
+        num_c = 5
+
     # heuristic T
     T = 1000
 
-    nodes_from_edges, short_path1, remove_edge_list = greedy_edges(G, num_k)
+    nodes_from_edges, short_path1, remove_edge_list = greedy_edges(G, num_k, num_c)
     # to_return = nx.algorithms.shortest_paths.weighted.dijkstra_path_length(G, 0, len(G)-1)
     # a = Counter(nodes_from_edges)
     P = G.copy()
     # print(nodes_from_edges)
-    common = np.argmax(np.asarray(nodes_from_edges))
     # common = [i[0] for i in a.most_common()]
-    if common:
         # common_node = common[0]
-        common_node = common
-        # print(common_node)
+       
+    # print(common_node)
+    while nodes_from_edges:
+        common_node = np.argmax(nodes_from_edges)
+        # print(nodes_from_edges)
+        # print("hey im here!")
+        if nx.algorithms.shortest_paths.generic.has_path(P, 0, len(G) - 1) and nx.is_connected(P):
+            shortest_path = nx.algorithms.shortest_paths.weighted.dijkstra_path_length(P, 0, len(G) - 1)
         if (
             common_node
             and common_node != 0
@@ -251,27 +271,25 @@ def simulated_annealing(G, num_k, num_c):
             and P.has_node(common_node)
         ):
             P.remove_node(common_node)
-            if nx.algorithms.shortest_paths.generic.has_path(P, 0, len(G) - 1) and nx.is_connected(
-                P
-            ):
-                shortest_path = nx.algorithms.shortest_paths.weighted.dijkstra_path_length(
-                    P, 0, len(G) - 1
-                )
-                prob = np.exp((short_path1 - shortest_path) / (-T))
-                if (shortest_path >= short_path1) or (random.random() < prob):
+            if nx.algorithms.shortest_paths.generic.has_path(P, 0, len(G) - 1) and nx.is_connected(P):
+                shortest_path = nx.algorithms.shortest_paths.weighted.dijkstra_path_length(P, 0, len(G) - 1)
+                # prob = np.exp((short_path1 - shortest_path) / (-T))
+                # if (shortest_path >= short_path1) or (random.random() < prob):
+                if (shortest_path >= short_path1) and num_c > 0:
                     remove_city_list.append(common_node)
+                    nodes_from_edges.pop(common_node)
                     num_c -= 1
                     maxK = num_k - len(remove_edge_list)
-                    nodescopy, short_path2, edge2 = greedy_edges(P, num_k)
+                    nodescopy, short_path2, edge2 = greedy_edges(P, num_k, num_c)
                     remove_edge_list = edge2
-                    # while (short_path2 > short_path1) and (common_node and common_node != 0 and common_node != (len(G) -1)) and num_c > 0:
                     while (
                         common_node and common_node != 0 and common_node != (len(G) - 1)
                     ) and num_c > 0:
-                        T -= 50
-                        prob = np.exp((short_path1 - shortest_path) / (-T))
-                        print(prob)
-                        if (short_path2 >= short_path1) or (random.random() < prob):
+                        # T -= 50
+                        # prob = np.exp((short_path1 - shortest_path) / (-T))
+                        # print(prob)
+                        # if (short_path2 >= short_path1) or (random.random() < prob):
+                        if (short_path2 >= short_path1):
                             H = P.copy()
                             remove_edge_list = edge2
                             short_path1 = short_path2
@@ -294,8 +312,13 @@ def simulated_annealing(G, num_k, num_c):
                                     remove_city_list.append(common_node)
                                     num_c -= 1
                                 maxK = num_k - len(edge2)
-                                nodescopy, short_path2, edge2 = greedy_edges(P, num_k)
+                                nodescopy, short_path2, edge2 = greedy_edges(P, num_k, num_c)
                                 remove_edge_list = edge2
+        nodes_from_edges.pop(common_node)
+        
+                    
+                
+               
     return remove_city_list, remove_edge_list
 
 
@@ -454,46 +477,46 @@ if __name__ == "__main__":
     short.close()
 
     """
-	shortest_path = nx.algorithms.shortest_paths.weighted.dijkstra_path(G, 0, len(G)-1)
-	path_length = nx.dijkstra_path_length(G, 0, len(G)-1)
-	
-	#remove nodes/edges along the path to make it move somewhere else
-	dists = []
-	for i in range(len(shortest_path)-1):
-		dists.append((H[shortest_path[i]][shortest_path[i+1]]['weight'], shortest_path[i], shortest_path[i+1]))	
-	dists.sort()
+    shortest_path = nx.algorithms.shortest_paths.weighted.dijkstra_path(G, 0, len(G)-1)
+    path_length = nx.dijkstra_path_length(G, 0, len(G)-1)
+    
+    #remove nodes/edges along the path to make it move somewhere else
+    dists = []
+    for i in range(len(shortest_path)-1):
+        dists.append((H[shortest_path[i]][shortest_path[i+1]]['weight'], shortest_path[i], shortest_path[i+1]))	
+    dists.sort()
 
-	k_count = 0
-	c_count = 0
-	for i in range(len(dists)):
-		if i >= len(dists): break
-		if num_k < k_count: break
-		if num_c < c_count: break
-		if not nx.algorithms.shortest_paths.generic.has_path(H, 0, len(G)-1):
-			print ("somehow something went wrong :C")
-			break
-		J = H.copy()
-		prob = random.random()
-		if prob > 0.5:
-			J.remove_edge(dists[i][1], dists[i][2])
-			if nx.algorithms.shortest_paths.generic.has_path(J, 0, len(G)-1):
-				path_length_new = nx.dijkstra_path_length(J, 0, len(G)-1)
-				if path_length_new > path_length:
-					H = J.copy()
-					remove_edge_list.append((dists[i][1], dists[i][2]))
-					path_length = path_length_new
-					k_count += 1
-		else:
-			if dists[i][1] == 0 or dists[i][1] == len(dists) -1: continue
-			J.remove_node(dists[i][1])
-			if nx.algorithms.shortest_paths.generic.has_path(J, 0, len(G)-1):
-				path_length_new = nx.dijkstra_path_length(J, 0, len(G)-1)
-				if path_length_new > path_length:
-					H = J.copy()
-					remove_city_list.append(dists[i][1])
-					path_length = path_length_new
-					dists = [(length, val, key) for (length, val, key) in dists if val == dists[i][1]]
-					c_count += 1
-	# print(dists)
-	#---end---
-	"""
+    k_count = 0
+    c_count = 0
+    for i in range(len(dists)):
+        if i >= len(dists): break
+        if num_k < k_count: break
+        if num_c < c_count: break
+        if not nx.algorithms.shortest_paths.generic.has_path(H, 0, len(G)-1):
+            print ("somehow something went wrong :C")
+            break
+        J = H.copy()
+        prob = random.random()
+        if prob > 0.5:
+            J.remove_edge(dists[i][1], dists[i][2])
+            if nx.algorithms.shortest_paths.generic.has_path(J, 0, len(G)-1):
+                path_length_new = nx.dijkstra_path_length(J, 0, len(G)-1)
+                if path_length_new > path_length:
+                    H = J.copy()
+                    remove_edge_list.append((dists[i][1], dists[i][2]))
+                    path_length = path_length_new
+                    k_count += 1
+        else:
+            if dists[i][1] == 0 or dists[i][1] == len(dists) -1: continue
+            J.remove_node(dists[i][1])
+            if nx.algorithms.shortest_paths.generic.has_path(J, 0, len(G)-1):
+                path_length_new = nx.dijkstra_path_length(J, 0, len(G)-1)
+                if path_length_new > path_length:
+                    H = J.copy()
+                    remove_city_list.append(dists[i][1])
+                    path_length = path_length_new
+                    dists = [(length, val, key) for (length, val, key) in dists if val == dists[i][1]]
+                    c_count += 1
+    # print(dists)
+    #---end---
+    """
