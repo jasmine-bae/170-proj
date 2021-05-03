@@ -7,7 +7,8 @@ import glob
 from collections import Counter
 import os
 import math
-from itertools import islice
+import multiprocessing as mp
+
 import numpy as np
 import random
 import heapq
@@ -169,7 +170,7 @@ def greedy_best_edge_removal_small_medium(OGgraph, num_k, num_c):
         if best_city == -1:
             break
 
-        if curr_path_len_best_city < curr_path_len_best_road:
+        if curr_path_len_best_city< curr_path_len_best_road:
             H = B.copy()
             remove_edge_list.append(best_edge)
             path_length = curr_path_len_best_road
@@ -197,7 +198,7 @@ def greedy_best_edge_removal_small_medium(OGgraph, num_k, num_c):
         if nx.is_connected(H) == False:
             print("oh no")
             break
-    return remove_city_list, remove_edge_list
+    return remove_city_list,remove_edge_list
 
 
 def solve(G):
@@ -227,333 +228,174 @@ def solve(G):
         num_k = 100
         num_c = 5
 
-    return create_heuristic(G, num_k, num_c)
+    #return create_heuristic(G, num_k, num_c, 0, 0, 0)
+    return [], [], 1
 
-    # big bad graph(s) time aaaa
-    # notes: find node that repeats the most time, remove that node, run the whole thing again
+def solve2(G):
+    """
+    Args:
+        G: networkx.Graph
+    Returns:
+        c: list of cities to remove
+        k: list of edges to remove
+    """
+    # pass
+    # A = nx.adjacency_matrix(G).todense()
 
-
-def k_shortest_paths(G, source, target, k, weight=None):
-    return list(islice(nx.shortest_simple_paths(G, source, target, weight=weight), k))
-
-
-def simulated_annealing(G, num_k, num_c):
-
+    # return parameters
     remove_edge_list = []
     remove_city_list = []
     H = G.copy()
+
+    # set k and c accordingly
     if len(G) <= 30:
         num_k = 15
         num_c = 1
+        #remove_city_list1, remove_edge_list1, her1 = create_heuristic(H,num_k, num_c, 9, 100, 13) # SMALL BEST i think
+        #remove_city_list2, remove_edge_list2, her2 = create_heuristic(H,num_k, num_c, 10, 40, 3) # MEDIUM BEST i think
+        #remove_city_list3, remove_edge_list3, her3 = create_heuristic(H,num_k, num_c, 3, 80, 27) #random
+        #remove_city_list4, remove_edge_list4, her4 = create_heuristic(H,num_k, num_c, 6, 100, 23) #random
+        #remove_city_list5, remove_edge_list5, her5 = create_heuristic(H,num_k, num_c, 11, 105, 11) # SMALL BEST i think
     elif len(G) <= 50:
         num_k = 50
         num_c = 3
     else:
         num_k = 100
         num_c = 5
-
-    # heuristic T
-    T = 1000
-
-    nodes_from_edges, short_path1, remove_edge_list = greedy_edges(G, num_k, num_c)
-    # to_return = nx.algorithms.shortest_paths.weighted.dijkstra_path_length(G, 0, len(G)-1)
-    # a = Counter(nodes_from_edges)
-    P = G.copy()
-    # print(nodes_from_edges)
-    # common = [i[0] for i in a.most_common()]
-    # common_node = common[0]
-
-    # print(common_node)
-    while nodes_from_edges:
-        common_node = np.argmax(nodes_from_edges)
-        # print(nodes_from_edges)
-        # print("hey im here!")
-        if nx.algorithms.shortest_paths.generic.has_path(P, 0, len(G) - 1) and nx.is_connected(P):
-            shortest_path = nx.algorithms.shortest_paths.weighted.dijkstra_path_length(
-                P, 0, len(G) - 1
-            )
-        if (
-            common_node
-            and common_node != 0
-            and common_node != (len(G) - 1)
-            and P.has_node(common_node)
-        ):
-            P.remove_node(common_node)
-            if nx.algorithms.shortest_paths.generic.has_path(P, 0, len(G) - 1) and nx.is_connected(
-                P
-            ):
-                shortest_path = nx.algorithms.shortest_paths.weighted.dijkstra_path_length(
-                    P, 0, len(G) - 1
-                )
-                # prob = np.exp((short_path1 - shortest_path) / (-T))
-                # if (shortest_path >= short_path1) or (random.random() < prob):
-                if (shortest_path >= short_path1) and num_c > 0:
-                    remove_city_list.append(common_node)
-                    nodes_from_edges.pop(common_node)
-                    num_c -= 1
-                    maxK = num_k - len(remove_edge_list)
-                    nodescopy, short_path2, edge2 = greedy_edges(P, num_k, num_c)
-                    remove_edge_list = edge2
-                    while (
-                        common_node and common_node != 0 and common_node != (len(G) - 1)
-                    ) and num_c > 0:
-                        # T -= 50
-                        # prob = np.exp((short_path1 - shortest_path) / (-T))
-                        # print(prob)
-                        # if (short_path2 >= short_path1) or (random.random() < prob):
-                        if short_path2 >= short_path1:
-                            H = P.copy()
-                            remove_edge_list = edge2
-                            short_path1 = short_path2
-                            common_node = np.argmax(np.asarray(nodescopy))
-                            # print(nodescopy)
-                            if not P.has_node(common_node):
-                                break
-                            # a = Counter(nodescopy)
-                            # common_node = [i[0] for i in a.most_common()][0]
-                            if (
-                                common_node
-                                and common_node != 0
-                                and common_node != (len(G) - 1)
-                                and P.has_node(common_node)
-                            ):
-                                P.remove_node(common_node)
-                                if not nx.is_connected(P):
-                                    continue
-                                if nx.algorithms.shortest_paths.generic.has_path(P, 0, len(G) - 1):
-                                    remove_city_list.append(common_node)
-                                    num_c -= 1
-                                maxK = num_k - len(edge2)
-                                nodescopy, short_path2, edge2 = greedy_edges(P, num_k, num_c)
-                                remove_edge_list = edge2
-        nodes_from_edges.pop(common_node)
-
-    return remove_city_list, remove_edge_list
-
-
-def create_heuristic(Ograph, num_edge, num_city):
-    edges_removed = 0
-    cities_removed = 0
-    remove_edge_list = []
-    remove_city_list = []
-    batch = 10
-    for i in range(0, math.ceil(num_edge / batch)):
-        paths = k_shortest_paths(Ograph, 0, len(G) - 1, batch, weight="weight")
-        city_her = {}
-        edge_her = {}
-        her_cnt = 1
-        for path in paths:
-            dists = []
-            for i in range(len(path) - 1):
-                city_her[path[i]] = city_her.get(path[i], 0) + (1 / her_cnt) / random.uniform(
-                    0.75, 1
-                )
-                edge_her[(path[i], path[i + 1])] = edge_her.get((path[i], path[i + 1]), 0) + (
-                    1 / her_cnt
-                ) / random.uniform(0.75, 1)
-            city_her[path[len(path) - 1]] = city_her.get(path[i], 0) + (
-                1 / her_cnt
-            ) / random.uniform(0.75, 1)
-            her_cnt += 2.5
-        city_her = dict(sorted(city_her.items(), key=lambda item: item[1], reverse=True))
-        edge_her = dict(sorted(edge_her.items(), key=lambda item: item[1], reverse=True))
-
-        J = Ograph.copy()
-        # print(city_her)
-        edge_iter = iter(edge_her)
-        city_iter = iter(city_her)
-
-        # combine heuristics with greedy picking
-        i = 0
-        while i < batch:
-            if edges_removed >= num_edge:
-                break
-            C = J.copy()
-            remove_edge = next(edge_iter, None)
-            if remove_edge == None:
-                break
-            if not C.has_node(remove_edge[1]) or not C.has_node(remove_edge[0]):
-                continue
-            if not C.has_edge(remove_edge[0], remove_edge[1]):
-                continue
-            C.remove_edge(remove_edge[0], remove_edge[1])
-            if nx.is_connected(C):
-                remove_edge_list.append(remove_edge)
-                J = C.copy()
-                edges_removed += 1
-                i += 1
-            else:
-                continue
-        i = 0
-        while i < num_city:
-            if cities_removed >= num_city:
-                # print(cities_removed)
-                # print(num_city)
-                break
-            C = J.copy()
-            remove_city = next(city_iter, None)
-            if remove_city == 0 or remove_city == len(G) - 1:
-                continue
-            if remove_city == None:
-                break
-            # print(remove_city)
-            C.remove_node(remove_city)
-            if nx.is_connected(C):
-                remove_city_list.append(remove_city)
-                J = C.copy()
-                cities_removed += 1
-                i += 1
-            else:
-                continue
-        Ograph = J
-
-    return remove_city_list, remove_edge_list
+    remove_city_list1, remove_edge_list1, her1 = create_heuristic(H,num_k, num_c, 9, 100, 13) # SMALL BEST i think
+    remove_city_list2, remove_edge_list2, her2 = create_heuristic(H,num_k, num_c, 10, 40, 3) # MEDIUM BEST i think
+    remove_city_list3, remove_edge_list3, her3 = create_heuristic(H,num_k, num_c, 3, 80, 27) #random
+    remove_city_list4, remove_edge_list4, her4 = create_heuristic(H,num_k, num_c, 5, 110, 20) #random
+    #best_val = max(her1,her2)
+    #her3, her4 = 0, 0
+    #her2, her4 = 0, 0
+    best_val = max(her1,her2,her3,her4)
+    if(best_val == her1):
+        print("1")
+        return remove_city_list1, remove_edge_list1, 1
+    if(best_val == her2):
+        print("2")
+        return remove_city_list2, remove_edge_list2, 2
+    if(best_val == her3):
+        print("3")
+        return remove_city_list3, remove_edge_list3, 3
+    if(best_val == her4):
+        print("4")
+        return remove_city_list4, remove_edge_list4, 4
+    # big bad graph(s) time aaaa
+    # notes: find node that repeats the most time, remove that node, run the whole thing again
 
 def k_shortest_paths(G, source, target, k, weight=None):
-    return list(islice(nx.shortest_simple_paths(G, source, target, weight=weight), k))
+  return list(islice(nx.shortest_simple_paths(G, source, target, weight=weight), k))
 
 
-def create_heuristic(Ograph, num_edge, num_city):
-    edges_removed = 0
-    cities_removed = 0
-    remove_edge_list = []
-    remove_city_list = []
+def create_heuristic(Ograph, num_edge, num_city, bat, her_c, dec_num):
+	edges_removed = 0
+	cities_removed = 0
+	remove_edge_list = []
+	remove_city_list = []
 
-    batch = 6
-    used_node = False
-    while(edges_removed<num_edge or cities_removed<num_city):
-        paths = k_shortest_paths(Ograph, 0, len(G)-1, batch, weight='weight')
-        edge_her = {}
-        city_her = {}
-        her_cnt = batch*batch*batch
-        #her_cnt = 1
-        for path in paths:
-            dists = []
-            for i in range(len(path)-1):
-                city_her[path[i]] = city_her.get(path[i], 1) + her_cnt
-                edge_her[(path[i], path[i+1])] = edge_her.get((path[i], path[i+1]), 1) + her_cnt #1/her_cnt
-            if her_cnt == batch*batch*batch:
-                her_cnt /= batch*.7
-            her_cnt -= batch/2
-            #her_cnt +=1
-        edge_her = dict(sorted(edge_her.items(), key=lambda item: item[1], reverse = True))
+	batch = bat
+	used_node = False
+	while(edges_removed<num_edge or cities_removed<num_city):
+		paths = k_shortest_paths(Ograph, 0, len(G)-1, batch, weight='weight')
+		edge_her = {}
+		city_her = {}
+		her_cnt = her_c
+		#her_cnt = 1
+		path_cnt = 0
+		for path in paths:
+			path_cnt+=1
+			for i in range(len(path)-1):
+				if(path_cnt == 1):
+					city_her[path[i]] = city_her.get(path[i], 50) + her_cnt
+					edge_her[(path[i], path[i+1])] = edge_her.get((path[i], path[i+1]), 50) + her_cnt
+					#her_cnt -= 13
+					continue
+				if(path[i] in city_her):
+					city_her[path[i]] = city_her.get(path[i]) + her_cnt
+				if((path[i], path[i+1]) in edge_her):
+					edge_her[(path[i], path[i+1])] = edge_her.get((path[i], path[i+1])) + her_cnt #1/her_cnt
+			her_cnt -= dec_num
+			#her_cnt +=1
+		edge_her = dict(sorted(edge_her.items(), key=lambda item: item[1], reverse = True))
+		city_her = dict(sorted(city_her.items(), key=lambda item: item[1], reverse = True))
 
-        J = Ograph.copy()
-        H = Ograph.copy()
-        edge_iter = iter(edge_her)
-        city_iter = iter(city_her)
-        best_edge = None
-        best_node = None
+		J = Ograph.copy()
+		H = Ograph.copy()
+		edge_iter = iter(edge_her)
+		city_iter = iter(city_her)
+		best_edge = None
+		best_node = None
 
-        i = 0
-        while(i < 1):
-            if(edges_removed >= num_edge):
-                break
-            C = J.copy()
-            remove_edge = next(edge_iter, None)
-            if(remove_edge == None):
-                break
-            if(not C.has_node(remove_edge[1]) or not C.has_node(remove_edge[0])):
-                continue
-            if(not C.has_edge(remove_edge[0], remove_edge[1])):
-                continue
-            C.remove_edge(remove_edge[0], remove_edge[1])
-            if(nx.is_connected(C)):
-                best_edge = remove_edge
-                J = C.copy()
-                i+=1
-            else:
-                continue
-        edge_graph = J.copy()
-        
-        i = 0
-        while(i < 1):
-            if(cities_removed >= num_city):
-                break
-            C = H.copy()
-            remove_city = next(city_iter, None)
-            if(remove_city == None):
-                break
-            if(not C.has_node(remove_city)):
-                continue
-            if(remove_city == 0 or remove_city == len(G)-1):
-                continue
-            C.remove_node(remove_city)
-            if(nx.is_connected(C)):
-                best_node = remove_city
-                H = C.copy()
-                i+=1
-            else:
-                continue
-        if(best_node != None):
-            node_graph = H.copy()
-            node_cost = nx.dijkstra_path_length(node_graph, 0, len(G)-1)
-            edge_cost = nx.dijkstra_path_length(edge_graph, 0, len(G)-1)
-            #try comparing heuristics instead of costs
-            if(best_edge == None or node_cost>edge_cost):
-                print(node_cost, " ", edge_cost)
-                remove_city_list.append(best_node)
-                cities_removed +=1
-                temp = remove_edge_list.copy()
-                for edge in temp:
-                    if(edge[0] == best_node or edge[1] == best_node):
-                        remove_edge_list.remove(edge)
-                        edges_removed-=1
-                Ograph = node_graph.copy()
-            else:
-                if(best_edge != None):
-                    remove_edge_list.append(best_edge)
-                    edges_removed +=1
-                    Ograph = edge_graph.copy()
-        elif(best_edge != None):
-            remove_edge_list.append(best_edge)
-            edges_removed +=1
-            Ograph = edge_graph.copy()
-        else:
-            break
-    return remove_city_list, remove_edge_list
-
-
-def greedy_all_shortest_edges(G, num_k, num_c):
-    all_paths = list(nx.all_shortest_paths(G, 0, len(G) - 1))
-    edge_removed_graph = G.copy()
-    edges_removed = []
-    for i in range(num_k):  # can iterate over up to k edges
-        longest_path = all_paths[0]  # new shortest path
-        longest_path_index = 0
-        optimal_edge = None
-        bridging_edges = list(nx.bridges(edge_removed_graph))
-        for j in range(len(all_paths[0]) - 1):  # iterate over all nodes
-            u = all_paths[0][j]
-            v = all_paths[0][j + 1]  # (u, v)
-            path_ind = 0
-            if (u, v) not in bridging_edges:  # removal won't disconnect graph
-                for long_path in all_paths[1:]:  # check longer paths
-                    path_ind += 1
-                    if u not in long_path and v not in long_path:
-                        if path_ind > longest_path_index:  # new shortest_path
-                            longest_path_index = path_ind
-                            longest_path = long_path
-                            optimal_edge = (u, v)
-                        break
-        if optimal_edge is None:
-            break
-        cp = edge_removed_graph.copy()
-        cp.remove_edge(optimal_edge[0], optimal_edge[1])
-        assert nx.is_connected(cp)
-        edge_removed_graph.remove_edge(optimal_edge[0], optimal_edge[1])
-        edges_removed.append(optimal_edge)
-        new_all_paths = []
-        for p in all_paths:
-            if optimal_edge[0] not in p or (
-                p.index(optimal_edge[0]) + 1 != len(p) - 1
-                and p[p.index(optimal_edge[0]) + 1] != optimal_edge[1]
-            ):
-                new_all_paths.append(p)
-        all_paths = new_all_paths
-    G = edge_removed_graph
-    return [], edges_removed
-
+		i = 0
+		while(i < 1):
+			if(edges_removed >= num_edge):
+				break
+			C = J.copy()
+			remove_edge = next(edge_iter, None)
+			if(remove_edge == None):
+				break
+			if(not C.has_node(remove_edge[1]) or not C.has_node(remove_edge[0])):
+				continue
+			if(not C.has_edge(remove_edge[0], remove_edge[1])):
+				continue
+			C.remove_edge(remove_edge[0], remove_edge[1])
+			if(nx.is_connected(C)):
+				best_edge = remove_edge
+				J = C.copy()
+				i+=1
+			else:
+				continue
+		edge_graph = J.copy()
+		
+		i = 0
+		while(i < 1):
+			if(cities_removed >= num_city):
+				break
+			C = H.copy()
+			remove_city = next(city_iter, None)
+			if(remove_city == None):
+				break
+			if(not C.has_node(remove_city)):
+				continue
+			if(remove_city == 0 or remove_city == len(G)-1):
+				continue
+			C.remove_node(remove_city)
+			if(nx.is_connected(C)):
+				best_node = remove_city
+				H = C.copy()
+				i+=1
+			else:
+				continue
+		if(best_node != None):
+			node_graph = H.copy()
+			#node_cost = nx.dijkstra_path_length(node_graph, 0, len(G)-1)
+			#edge_cost = nx.dijkstra_path_length(edge_graph, 0, len(G)-1)
+			#try comparing heuristics instead of costs
+			if(best_edge == None or city_her[best_node]>edge_her[best_edge]):
+				#print(node_cost, " ", edge_cost)
+				remove_city_list.append(best_node)
+				cities_removed +=1
+				temp = remove_edge_list.copy()
+				for edge in temp:
+					if(edge[0] == best_node or edge[1] == best_node):
+						remove_edge_list.remove(edge)
+						edges_removed-=1
+				Ograph = node_graph.copy()
+			else:
+				if(best_edge != None):
+					remove_edge_list.append(best_edge)
+					edges_removed +=1
+					Ograph = edge_graph.copy()
+		elif(best_edge != None):
+			remove_edge_list.append(best_edge)
+			edges_removed +=1
+			Ograph = edge_graph.copy()
+		else:
+			break
+	val = nx.dijkstra_path_length(Ograph, 0, len(G)-1)
+	return remove_city_list, remove_edge_list, val
 
 def min_cut_life(G, num_k, num_c):
     # SARTHAK MIN CUTS LIFE
@@ -675,39 +517,90 @@ def min_cut_life(G, num_k, num_c):
 # 		print(distance)
 # 		write_output_file(G, c, k, output_path)
 
-
-# For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
-if __name__ == "__main__":
-    inputs = glob.glob("inputs/medium/*")
-    inputs = sorted(inputs)
-    os.rename("current_distances.txt", "old_distances.txt")
-    curr = open("current_distances.txt", "w")
-    # short = open("shortest_distances.txt", "w")
+if __name__ == '__main__':
+    inputs = sorted(glob.glob('inputs/medium/*')) #change this
+    new = open("new_distances.txt", "w")
+    short = open("shortest_distances_medium.txt", "r") #change this
     delta = open("delta_distances.txt", "w")
-    old = open("old_distances.txt", "r")
     delta_dist_array = []
+    heur_count = {1:0, 2:0, 3:0, 4:0, 5:0}
     for input_path in inputs:
-        output_path = "outputs/" + basename(normpath(input_path))[:-3] + ".out"
+        output_path = 'outputs/' + basename(normpath(input_path))[:-3] + '.out'
         G = read_input_file(input_path)
-        c, k = solve(G)
+        c, k, best = solve2(G)
+        heur_count[best] = heur_count[best] + 1
         assert is_valid_solution(G, c, k)
-        distance = calculate_score(G, c, k)
-        curr.write(input_path.split("/")[2] + ": " + str(distance) + "\n")
-        # short.write(input_path.split("/")[2] + ": " + str(shortest) + "\n")
+        b = calculate_score(G, c, k)
+        distance = b
+        new.write(input_path.split("/")[2] + ": " + str(distance) + "\n")
+        print(basename(normpath(input_path))[:-3] + ": " + str(distance))
+        print(heur_count)
         delta_dist_array.append(distance)
         write_output_file(G, c, k, output_path)
-    curr.close()
-    # short.close()
-    short = open("shortest_distances.txt", "r")
-
+    new.close()
+    average = delta_dist_array[:]
+    count_better = 0
+    count_worse = 0
+    count_same = 0
     i = 0
     for line in short:
         old_score = float(line.split(": ")[1][:-1])
-        delta_dist_array[i] = (delta_dist_array[i] - old_score) / old_score
-        delta.write(line.split(": ")[0] + ": " + str(delta_dist_array[i]) + "\n")
+        delta_dist_array[i] = delta_dist_array[i] - old_score
+        average[i] = (average[i] - old_score) / old_score
+        if delta_dist_array[i] > 0:
+            delta.write(line.split(": ")[0] + ": " + str(delta_dist_array[i]) + " better" "\n")
+            count_better += 1
+        elif delta_dist_array[i] < 0:
+            delta.write(line.split(": ")[0] + ": " + str(delta_dist_array[i]) + " worse" "\n")
+            count_worse += 1
+        else:
+            delta.write(line.split(": ")[0] + ": " + str(delta_dist_array[i]) + " same" "\n")
+            count_same += 1
         i += 1
-    print(np.mean(delta_dist_array))
+    delta.write("number better: " + str(count_better) + "\n")
+    delta.write("number worse: " + str(count_worse) + "\n")
+    delta.write("number same: " + str(count_same) + "\n")
+    # delta.write("average: " + str(np.mean(average)) + "\n")
     short.close()
+    print(np.mean(average))
+    print(heur_count)
+
+
+
+
+
+# For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
+# if __name__ == "__main__":
+#     inputs = glob.glob("inputs/large/*")
+#     inputs = sorted(inputs)
+#     os.rename("current_distances.txt", "old_distances.txt")
+#     curr = open("current_distances.txt", "w")
+#     # short = open("shortest_distances.txt", "w")
+#     delta = open("delta_distances.txt", "w")
+#     old = open("old_distances.txt", "r")
+#     delta_dist_array = []
+#     for input_path in inputs:
+#         output_path = "outputs/" + basename(normpath(input_path))[:-3] + ".out"
+#         G = read_input_file(input_path)
+#         c, k = solve2(G)
+#         assert is_valid_solution(G, c, k)
+#         distance = calculate_score(G, c, k)
+#         curr.write(input_path.split("/")[2] + ": " + str(distance) + "\n")
+#         # short.write(input_path.split("/")[2] + ": " + str(shortest) + "\n")
+#         delta_dist_array.append(distance)
+#         write_output_file(G, c, k, output_path)
+#     curr.close()
+#     # short.close()
+#     short = open("shortest_distances.txt", "r")
+
+#     i = 0
+#     for line in short:
+#         old_score = float(line.split(": ")[1][:-1])
+#         delta_dist_array[i] = (delta_dist_array[i] - old_score) / old_score
+#         delta.write(line.split(": ")[0] + ": " + str(delta_dist_array[i]) + "\n")
+#         i += 1
+#     print(np.mean(delta_dist_array))
+#     short.close()
 
     """
     shortest_path = nx.algorithms.shortest_paths.weighted.dijkstra_path(G, 0, len(G)-1)
