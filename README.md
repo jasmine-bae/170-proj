@@ -21,5 +21,5 @@ When writing inputs/outputs:
 - Run the functions `read_input_file` and `read_output_file` to validate your files before submitting!
   - These are the functions run by the autograder to validate submissions
 
-To reproduce our code, simply run `python solver.py`. 
+To reproduce our code, simply run `python solver.py`; there is a line in the MAIN that allows you to change size-change this var to "small", "medium" or "large" to get the correct output.
 In terms of non standard libraries, we only used numpy and itertools for more efficient iteration/computation

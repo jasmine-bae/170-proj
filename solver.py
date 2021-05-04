@@ -42,7 +42,6 @@ def solve(G):
         rel = [remove_edge_list1, remove_edge_list2, remove_edge_list3, remove_edge_list4, remove_edge_list5, remove_edge_list6]
         herl = [her1, her2, her3, her4, her5, her6]
         best = np.argmax(herl)
-        print(best + 1)
         return rcl[best], rel[best]
     elif len(G) <= 50:
         num_k = 50
@@ -55,7 +54,6 @@ def solve(G):
         rel = [remove_edge_list1, remove_edge_list2, remove_edge_list3, remove_edge_list4]
         herl = [her1, her2, her3, her4]
         best = np.argmax(herl)
-        print(best + 1)
         return rcl[best], rel[best]
     else:
         num_k = 100
@@ -66,7 +64,6 @@ def solve(G):
         rel = [remove_edge_list1, remove_edge_list2]
         herl = [her1, her2]
         best = np.argmax(herl)
-        print(best + 1)
         return rcl[best], rel[best]
 
 def k_shortest_paths(G, source, target, k, weight=None):
@@ -206,23 +203,21 @@ def create_heuristic(Ograph, num_edge, num_city, bat, her_c, dec_num):
 # 		write_output_file(G, c, k, output_path)
 
 if __name__ == '__main__':
-    inputs = sorted(glob.glob('inputs/small/*')) #change this
+    size = "large"
+    inputs = sorted(glob.glob('inputs/' + size + '/*')) #change this
     new = open("new_distances.txt", "w")
-    short = open("shortest_distances_small.txt", "r") #change this
+    short = open("shortest_distances_" + size + ".txt", "r") #change this
     delta = open("delta_distances.txt", "w")
     delta_dist_array = []
-    heur_count = {1:0, 2:0, 3:0, 4:0, 5:0}
     for input_path in inputs:
-        output_path = 'outputs/' + basename(normpath(input_path))[:-3] + '.out'
+        output_path = 'outputs/' + size + "/" + basename(normpath(input_path))[:-3] + '.out'
         G = read_input_file(input_path)
-        c, k, best = solve(G)
-        heur_count[best] = heur_count[best] + 1
+        c, k = solve(G)
         assert is_valid_solution(G, c, k)
         b = calculate_score(G, c, k)
         distance = b
         new.write(input_path.split("/")[2] + ": " + str(distance) + "\n")
         print(basename(normpath(input_path))[:-3] + ": " + str(distance))
-        print(heur_count)
         delta_dist_array.append(distance)
         write_output_file(G, c, k, output_path)
     new.close()
@@ -250,5 +245,3 @@ if __name__ == '__main__':
     delta.write("number same: " + str(count_same) + "\n")
     # delta.write("average: " + str(np.mean(average)) + "\n")
     short.close()
-    print(np.mean(average))
-    print(heur_count)
