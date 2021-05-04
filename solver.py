@@ -32,27 +32,27 @@ def solve(G):
     if len(G) <= 30:
         num_k = 15
         num_c = 1
-        remove_city_list1, remove_edge_list1, her1 = create_heuristic(H,num_k, num_c, 9, 100, 13) # SMALL BEST i think
-        remove_city_list2, remove_edge_list2, her2 = create_heuristic(H,num_k, num_c, 10, 40, 3) # MEDIUM BEST i think
-        remove_city_list3, remove_edge_list3, her3 = create_heuristic(H,num_k, num_c, 3, 80, 27) #random
-        remove_city_list4, remove_edge_list4, her4 = create_heuristic(H,num_k, num_c, 6, 100, 23) #random
-        remove_city_list5, remove_edge_list5, her5 = create_heuristic(H,num_k, num_c, 11, 105, 11) # SMALL BEST i think
-        rcl = [remove_city_list1, remove_city_list2, remove_city_list3, remove_city_list4, remove_city_list5]
-        rel = [remove_edge_list1, remove_edge_list2, remove_edge_list3, remove_edge_list4, remove_edge_list5]
-        herl = [her1, her2, her3, her4, her5]
+        remove_city_list1, remove_edge_list1, her1 = create_heuristic(H,num_k, num_c, 9, 100, 13)
+        remove_city_list2, remove_edge_list2, her2 = create_heuristic(H,num_k, num_c, 10, 40, 3)
+        remove_city_list3, remove_edge_list3, her3 = create_heuristic(H,num_k, num_c, 3, 80, 27)
+        remove_city_list4, remove_edge_list4, her4 = create_heuristic(H,num_k, num_c, 6, 100, 23)
+        remove_city_list5, remove_edge_list5, her5 = create_heuristic(H,num_k, num_c, 11, 420, 69)
+        remove_city_list6, remove_edge_list6, her6 = create_heuristic(H,num_k, num_c, 13, 77, 9)
+        rcl = [remove_city_list1, remove_city_list2, remove_city_list3, remove_city_list4, remove_city_list5, remove_city_list6]
+        rel = [remove_edge_list1, remove_edge_list2, remove_edge_list3, remove_edge_list4, remove_edge_list5, remove_edge_list6]
+        herl = [her1, her2, her3, her4, her5, her6]
         best = np.argmax(herl)
         print(best + 1)
         return rcl[best], rel[best]
     elif len(G) <= 50:
         num_k = 50
         num_c = 3
-        remove_city_list1, remove_edge_list1, her1 = create_heuristic(H,num_k, num_c, 9, 100, 13) # SMALL BEST i think
-        remove_city_list2, remove_edge_list2, her2 = create_heuristic(H,num_k, num_c, 10, 40, 3) # MEDIUM BEST i think
-        remove_city_list3, remove_edge_list3, her3 = create_heuristic(H,num_k, num_c, 3, 80, 27) #random
-        remove_city_list4, remove_edge_list4, her4 = create_heuristic(H,num_k, num_c, 6, 100, 23) #random#best_val = max(her1,her2)
-        remove_city_list5, remove_edge_list5, her5 = create_heuristic(H,num_k, num_c, 5, 110, 20) #random#best_val = max(her1,her2)
-        rcl = [remove_city_list1, remove_city_list2, remove_city_list3, remove_city_list4, remove_city_list5]
-        rel = [remove_edge_list1, remove_edge_list2, remove_edge_list3, remove_edge_list4, remove_edge_list5]
+        remove_city_list1, remove_edge_list1, her1 = create_heuristic(H,num_k, num_c, 9, 100, 13)
+        remove_city_list2, remove_edge_list2, her2 = create_heuristic(H,num_k, num_c, 10, 40, 3)
+        remove_city_list3, remove_edge_list3, her3 = create_heuristic(H,num_k, num_c, 3, 80, 27)
+        remove_city_list4, remove_edge_list4, her4 = create_heuristic(H,num_k, num_c, 6, 100, 23)
+        rcl = [remove_city_list1, remove_city_list2, remove_city_list3, remove_city_list4]
+        rel = [remove_edge_list1, remove_edge_list2, remove_edge_list3, remove_edge_list4]
         herl = [her1, her2, her3, her4, her5]
         best = np.argmax(herl)
         print(best + 1)
@@ -60,8 +60,8 @@ def solve(G):
     else:
         num_k = 100
         num_c = 5
-        remove_city_list1, remove_edge_list1, her1 = create_heuristic(H,num_k, num_c, 9, 100, 13) # SMALL BEST i think
-        remove_city_list2, remove_edge_list2, her2 = create_heuristic(H,num_k, num_c, 10, 40, 3) # MEDIUM BEST i think
+        remove_city_list1, remove_edge_list1, her1 = create_heuristic(H,num_k, num_c, 9, 100, 13) 
+        remove_city_list2, remove_edge_list2, her2 = create_heuristic(H,num_k, num_c, 10, 40, 3)
         rcl = [remove_city_list1, remove_city_list2]
         rel = [remove_edge_list1, remove_edge_list2]
         herl = [her1, her2]
