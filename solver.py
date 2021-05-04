@@ -204,11 +204,7 @@ def create_heuristic(Ograph, num_edge, num_city, bat, her_c, dec_num):
 
 if __name__ == '__main__':
     size = "large"
-    inputs = sorted(glob.glob('inputs/' + size + '/*')) #change this
-    new = open("new_distances.txt", "w")
-    short = open("shortest_distances_" + size + ".txt", "r") #change this
-    delta = open("delta_distances.txt", "w")
-    delta_dist_array = []
+    inputs = sorted(glob.glob('inputs/' + size + '/large-9*')) #change this
     for input_path in inputs:
         output_path = 'outputs/' + size + "/" + basename(normpath(input_path))[:-3] + '.out'
         G = read_input_file(input_path)
@@ -216,32 +212,5 @@ if __name__ == '__main__':
         assert is_valid_solution(G, c, k)
         b = calculate_score(G, c, k)
         distance = b
-        new.write(input_path.split("/")[2] + ": " + str(distance) + "\n")
         print(basename(normpath(input_path))[:-3] + ": " + str(distance))
-        delta_dist_array.append(distance)
         write_output_file(G, c, k, output_path)
-    new.close()
-    average = delta_dist_array[:]
-    count_better = 0
-    count_worse = 0
-    count_same = 0
-    i = 0
-    for line in short:
-        old_score = float(line.split(": ")[1][:-1])
-        delta_dist_array[i] = delta_dist_array[i] - old_score
-        average[i] = (average[i] - old_score) / old_score
-        if delta_dist_array[i] > 0:
-            delta.write(line.split(": ")[0] + ": " + str(delta_dist_array[i]) + " better" "\n")
-            count_better += 1
-        elif delta_dist_array[i] < 0:
-            delta.write(line.split(": ")[0] + ": " + str(delta_dist_array[i]) + " worse" "\n")
-            count_worse += 1
-        else:
-            delta.write(line.split(": ")[0] + ": " + str(delta_dist_array[i]) + " same" "\n")
-            count_same += 1
-        i += 1
-    delta.write("number better: " + str(count_better) + "\n")
-    delta.write("number worse: " + str(count_worse) + "\n")
-    delta.write("number same: " + str(count_same) + "\n")
-    # delta.write("average: " + str(np.mean(average)) + "\n")
-    short.close()
