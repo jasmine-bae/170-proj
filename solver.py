@@ -53,7 +53,7 @@ def solve(G):
         remove_city_list4, remove_edge_list4, her4 = create_heuristic(H,num_k, num_c, 6, 100, 23)
         rcl = [remove_city_list1, remove_city_list2, remove_city_list3, remove_city_list4]
         rel = [remove_edge_list1, remove_edge_list2, remove_edge_list3, remove_edge_list4]
-        herl = [her1, her2, her3, her4, her5]
+        herl = [her1, her2, her3, her4]
         best = np.argmax(herl)
         print(best + 1)
         return rcl[best], rel[best]
